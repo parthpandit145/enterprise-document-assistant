@@ -1,7 +1,6 @@
 # Enterprise Document Assistant
 
-A Retrieval-Augmented Generation system that answers natural-language questions
-about internal company documents — policies, handbooks, manuals, reports — and
+A Retrieval-Augmented Generation system that answers natural-language questionsabout internal company documents policies, handbooks, manuals, reports and
 cites the file and page every claim came from.
 
 ```
@@ -55,7 +54,7 @@ Ask from the terminal instead of the browser:
 
 **No API key?** Everything except answer synthesis is local and free. Set
 `LLM_PROVIDER=extractive` in `.env` and the whole pipeline runs with no
-credentials and no network — see [Providers](#providers) below. Without either
+credentials and no network see [Providers](#providers) below. Without either
 a key or that setting, the assistant tells you so in one line rather than
 raising.
 
@@ -69,7 +68,7 @@ raising.
 its filename and page number. That metadata is not decoration: it is the only
 reason a citation at the far end of the pipeline can be checked by a human.
 
-PDF text extraction is messy — words get split across line breaks
+PDF text extraction is messy words get split across line breaks
 (`confiden-\ntial`), and sentences arrive with hard newlines in the middle.
 Both are normalised here, because both degrade chunking and embedding quality.
 Pages that extract to almost nothing (cover sheets, scanned images) are dropped
@@ -85,12 +84,12 @@ them. Split too finely and a fact loses the context that makes it meaningful.
 ~1000 characters keeps roughly one idea per vector.
 
 The 200-character overlap exists for a specific failure: a fact that straddles a
-chunk boundary — "…must be reported within" / "24 hours to the Service Desk" —
+chunk boundary "…must be reported within" / "24 hours to the Service Desk" 
 would otherwise be unretrievable in either half. Overlap guarantees it appears
 whole in at least one chunk.
 
 The splitter tries paragraph breaks first, then line breaks, then sentence
-endings, and only cuts mid-word as a last resort.
+endings, and only cuts mid word as a last resort.
 
 Each chunk gets a **stable id** derived from its content and origin, so
 re-running ingestion upserts rather than duplicating. Adding one new PDF to a
@@ -103,38 +102,38 @@ offline after the first download, and good enough that retrieval quality is not
 the bottleneck on documents this size.
 
 Embeddings are what make this semantic rather than keyword search. In the sample
-corpus, the handbook never uses the phrase "paid time off" — it says "annual
+corpus, the handbook never uses the phrase "paid time off" it says "annual
 leave" throughout. Asking *"how many days of paid time off do I get?"* still
 retrieves the right chunk, at cosine similarity 0.55. Ctrl-F cannot do that.
 
 Vectors are L2-normalised, and the Chroma collection is built in **cosine
 space** rather than the default L2, so the relevance score LangChain returns is
-literally cosine similarity — a number you can set a threshold against and
+literally cosine similarity a number you can set a threshold against and
 reason about, rather than an artefact of the distance metric.
 
 ### 4. Vector storage — `docassist/vectorstore.py`
 
 ChromaDB, persisted to `storage/chroma/`. Stores the chunk text, its embedding
-and its metadata, and does the nearest-neighbour search. Runs in-process with no
+and its metadata, and does the nearest neighbour search. Runs in-process with no
 server to operate, which is the right trade for a corpus of this size.
 
 ### 5. Retrieval — `docassist/retriever.py`
 
 The question is embedded with **the same model used for indexing** (vectors from
-two different models are not comparable — the search silently returns nonsense
+two different models are not comparable the search silently returns nonsense
 rather than erroring), compared against every stored chunk, and the top `k`
 come back.
 
 Chunks below `SCORE_THRESHOLD` are discarded. Overlapping chunks that duplicate
 the same passage are collapsed. The survivors are formatted into a numbered
-block — `[1] Source: handbook.pdf | Page: 3` — and it is that numbering that
+block `[1] Source: handbook.pdf | Page: 3` and it is that numbering that
 makes citation possible at all.
 
 Only these few chunks reach the LLM, not the corpus. That is what keeps the
 prompt small, the cost low, and the answer focused on the passage that matters.
 
 `SEARCH_TYPE=mmr` swaps plain similarity for maximal marginal relevance, which
-trades a little relevance for more diverse chunks — better for *"summarise this
+trades a little relevance for more diverse chunks better for *"summarise this
 document"*, where plain similarity tends to return five near-identical chunks
 from the same section.
 
@@ -303,10 +302,10 @@ python -m pytest tests/ -q
 ```
 
 24 tests, no network and no API key. They use a stub LLM, because what needs
-testing is the pipeline's behaviour *around* the model — that it abstains
+testing is the pipeline's behaviour *around* the model that it abstains
 without calling out, that it filters low-relevance chunks, that it lists only
 the sources actually cited, that it flags a citation pointing at a passage that
-was never retrieved — not the model's prose. `tests/test_anthropic_provider.py`
+was never retrieved not the model's prose. `tests/test_anthropic_provider.py`
 asserts the exact request shape sent to the Anthropic API against a mocked
 client.
 
@@ -328,7 +327,7 @@ Deliberately built in:
 
 - **vocabulary mismatch** — "annual leave" is never called "paid time off", so
   only semantic search finds it;
-- **cross-document overlap** — data retention appears in both the privacy and
+- **cross-document overlap** - data retention appears in both the privacy and
   security policies, so retrieval has to pick the right one;
 - **real gaps** — nothing covers parental leave pay, stock options, Q4 revenue
   or the CEO's name, which is what the abstention tests probe.
