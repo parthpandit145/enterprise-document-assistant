@@ -1,0 +1,39 @@
+# Requires Python 3.11+ (developed and tested on 3.12).
+# numpy needs 3.12+, pandas 3.11+, streamlit and sentence-transformers 3.10+.
+# macOS system python3 is 3.9 and will fail here — use `make setup`.
+
+# --- Orchestration -----------------------------------------------------------
+langchain>=0.3.20,<0.4
+langchain-core>=0.3.60,<0.4
+langchain-community>=0.3.20,<0.4
+langchain-text-splitters>=0.3.5,<0.4
+
+# --- Vector store ------------------------------------------------------------
+langchain-chroma>=0.2.2,<0.3
+chromadb>=0.6.3
+
+# --- Embeddings (local, free) ------------------------------------------------
+langchain-huggingface>=0.1.2
+sentence-transformers>=3.0.0
+
+# --- PDF parsing -------------------------------------------------------------
+pypdf>=5.0.0
+
+# --- LLM (default provider) --------------------------------------------------
+anthropic>=0.69.0
+
+# --- UI ----------------------------------------------------------------------
+streamlit>=1.40.0
+
+# --- Config ------------------------------------------------------------------
+python-dotenv>=1.0.1
+
+# --- Test PDF generation -----------------------------------------------------
+reportlab>=4.2.0
+
+# --- Tests -------------------------------------------------------------------
+pytest>=8.0.0
+
+# --- Optional providers (uncomment if you want them) -------------------------
+# langchain-openai>=0.3.0         # OpenAI embeddings + chat models
+# langchain-ollama>=0.3.0         # fully local LLM via Ollama

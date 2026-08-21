@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+storage/
+data/pdfs/*.pdf
+!data/pdfs/.gitkeep
+.DS_Store
+.pytest_cache/
+*.egg-info/
