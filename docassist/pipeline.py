@@ -79,6 +79,35 @@ class RAGResponse:
         )
 
 
+def _resolve_abstention(answer: str) -> tuple[str, bool]:
+    """Decide whether an answer is really a refusal, and clean it up if not.
+
+    A naive `marker in answer` test is wrong. Smaller local models routinely
+    answer the question correctly and *then* append the refusal sentence
+    anyway — belt-and-braces behaviour picked up from the instruction. Scoring
+    that as a refusal both loses a good answer and inflates the refusal rate
+    on the benchmark.
+
+    So: strip the marker out and look at what is left. Substantive remaining
+    text means it answered, and the contradictory sentence is dropped.
+    """
+    if NO_ANSWER_MARKER.lower() not in answer.lower():
+        return answer, False
+
+    kept = [
+        line
+        for line in answer.splitlines()
+        if NO_ANSWER_MARKER.lower() not in line.lower()
+    ]
+    residual = "\n".join(kept).strip()
+
+    # Nothing of substance besides the refusal — a genuine abstention.
+    if len(residual) < 40:
+        return NO_ANSWER_MARKER, True
+
+    return residual, False
+
+
 def _score_citations(answer: str, n_passages: int) -> tuple[float, list[int], set[int]]:
     """Check the answer's [n] markers against the passages it was given."""
     cited = {int(m) for m in _CITATION.findall(answer)}
@@ -146,8 +175,7 @@ class RAGPipeline:
         context = build_context(chunks, self.settings.max_context_chars)
         result = self.llm.generate(SYSTEM_PROMPT, build_user_prompt(context, question))
 
-        answer = result.text.strip()
-        abstained = NO_ANSWER_MARKER.lower() in answer.lower()
+        answer, abstained = _resolve_abstention(result.text.strip())
         coverage, invalid, valid = _score_citations(answer, len(chunks))
 
         if invalid:
