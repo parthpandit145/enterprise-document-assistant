@@ -122,6 +122,27 @@ def test_provider_failure_is_not_reported_as_abstention():
     assert "credentials" in response.answer
 
 
+def test_answer_with_a_tacked_on_refusal_is_not_scored_as_a_refusal():
+    """Smaller models often answer, then append the refusal line anyway.
+
+    Treating that as a refusal loses a correct answer and inflates the
+    benchmark's refusal rate.
+    """
+    store = _store_returning([(_chunk("Annual leave is 30 days.").document, 0.6)])
+    reply = (
+        "Full-time employees are entitled to 30 days of annual leave "
+        "per calendar year, in addition to public holidays. [1]\n"
+        f"{NO_ANSWER_MARKER}"
+    )
+    response = _pipeline(StubLLM(reply), store).answer("How much leave?")
+
+    assert not response.abstained
+    assert "30 days" in response.answer
+    assert NO_ANSWER_MARKER not in response.answer  # contradictory line dropped
+    assert response.citation_coverage == 1.0
+    assert response.grounded
+
+
 def test_model_refusal_is_reported_as_abstention():
     store = _store_returning([(_chunk("Leave policy text.").document, 0.5)])
     response = _pipeline(StubLLM(NO_ANSWER_MARKER), store).answer("Parental leave pay?")
