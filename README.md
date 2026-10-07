@@ -1,5 +1,6 @@
 # Enterprise Document Assistant
 
+Originally built in 04/2026 published to GitHub later, so commit history reflects the upload date rather than the development timeline.
 A Retrieval-Augmented Generation system that answers natural-language questionsabout internal company documents policies, handbooks, manuals, reports and
 cites the file and page every claim came from.
 
